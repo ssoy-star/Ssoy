@@ -1,0 +1,16 @@
+{
+  "style": "variety",
+  "title": "아이패드 하나로|*쇼츠 편집* 끝내는 법",
+  "title_mode": "persistent",
+  "layout": "auto",
+  "pace": "tight",
+  "ranges": [[13.2, 21.6], [1.8, 9.8]],
+  "emphasis": ["자동", "업로드"],
+  "replace": {"슈츠": "쇼츠", "손해에요": "손해예요"},
+  "vocab": ["쇼츠", "릴스", "아이패드"],
+  "zoom": "alternate",
+  "zoom_amount": 1.12,
+  "bgm": null,
+  "bgm_db": -20,
+  "style_overrides": {"caption": {"active_color": "#00E5FF"}}
+}

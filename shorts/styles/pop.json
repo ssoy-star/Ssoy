@@ -1,0 +1,20 @@
+{
+  "name": "pop",
+  "description": "단어 팝업형 — 한 번에 1~2단어만 크게, 말하는 단어가 튀어오르며 초록 하이라이트. 해외/국내 정보형·동기부여 쇼츠 문법. 가로 원본은 얼굴 추적 풀스크린 크롭.",
+  "landscape_layout": "crop",
+  "pace": "tight",
+  "zoom": {"mode": "alternate", "amount": 1.15},
+  "caption": {
+    "font": "Black Han Sans", "size": 118,
+    "color": "#FFFFFF", "active_color": "#3DFF6E", "emphasis_color": "#FFE600",
+    "outline_color": "#000000", "outline": 7, "shadow": 5, "shadow_color": "#000000AA",
+    "max_chars": 8, "max_words": 2, "max_lines": 1,
+    "karaoke": true, "pop": "word", "word_pop_scale": 122, "y": 0.62
+  },
+  "title": {
+    "font": "Black Han Sans", "size": 88, "color": "#FFFFFF", "accent_color": "#3DFF6E",
+    "outline_color": "#000000", "outline": 8, "shadow": 0,
+    "y": 0.10, "mode": "hook", "hook_seconds": 3.0
+  },
+  "progress_bar": {"enabled": true, "color": "#3DFF6E", "height": 10}
+}

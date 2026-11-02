@@ -1,0 +1,48 @@
+# Claude 작업 지침 — 쇼츠 편집 스튜디오
+
+사용자는 아이패드에서 이 세션을 쓰는 쇼츠 편집자다. 원본 영상을 받아 트렌디한 쇼츠/릴스/틱톡으로
+편집하고, 결과를 보여준 뒤, 승인되면 업로드(예약)한다. 사용자와는 한국어로 대화한다.
+
+## 세션 시작 시
+
+- `bash setup.sh` (컨테이너가 매번 새로 뜨므로 패키지·폰트를 다시 준비해야 한다).
+
+## 편집 절차
+
+1. **원본 받기**: 사용자가 준 Drive/Dropbox/직접 링크 → `python3 -m shorts fetch "<url>"` → `inbox/`.
+   Google Drive/Dropbox 커넥터가 연결돼 있으면 그걸로 찾아 받아도 된다.
+2. **대본**: `python3 -m shorts transcribe inbox/<file>` → `work/<name>/transcript.txt` 를 읽는다.
+   한국어 정확도가 아쉬우면 `--model medium` (느리지만 정확).
+3. **구성 결정** (여기가 핵심 — 편집자의 판단):
+   - 첫 1~2초 훅: 가장 강한 문장/장면을 맨 앞으로 (`ranges` 순서로 재배치).
+   - 군더더기 문장 삭제, 권장 길이 20~45초 (최대 3분).
+   - 제목: 2줄 이내, 줄당 12자 이내, 핵심어는 `*별표*` 로 강조, `|` 로 줄바꿈.
+   - ASR 오타는 `replace` 로 교정, 강조 단어는 `emphasis`.
+   - 스타일 선택: 토크/정보 → `pop` 또는 `variety`, 예능 클립 → `variety`, 일상 → `clean`, 틱톡 감성 → `box`.
+   - 결정 내용을 `work/<name>/plan.json` 으로 저장 (예시: `shorts/plan.example.json`).
+4. **미리보기**: `python3 -m shorts edit inbox/<file> --plan work/<name>/plan.json --draft`
+   → 결과 프레임을 몇 장 뽑아 직접 확인한 뒤 `SendUserFile` 로 MP4 + 커버를 보낸다.
+5. **피드백 반영** 후 `--draft` 없이 최종 렌더 → 다시 전송.
+6. 사용자가 반복해서 말하는 취향(자막 색, 길이, 말투 등)은 `docs/style-notes.md` 에 적어 다음에도 적용한다.
+
+## 레퍼런스 학습
+
+- 사용자가 잘 나가는 쇼츠 파일(화면 녹화 등)을 주면 `python3 -m shorts analyze <file> --transcript`.
+- `work/refs/<name>/report.json`(컷 속도, 첫 컷 시점, 음량, 훅 문장)과 `sheet.jpg`, `hook.jpg` 를 직접 보고
+  자막 위치·크기·색·폰트 느낌·레이아웃을 읽어 `shorts/styles/<새이름>.json` 커스텀 스타일을 만든다.
+- 컷 속도는 `pace`/`zoom` 으로, 훅 구조는 `ranges` 재배치로 흉내 낸다. 특정 영상을 그대로 베끼지 말고 문법만 가져온다.
+
+## 업로드 (Metricool MCP)
+
+- `getBrandSettings` 로 브랜드/연결된 채널/시간대를 확인한다. 연결 안 된 채널(틱톡·유튜브 등)은
+  사용자가 Metricool 앱/웹에서 직접 연결해야 한다.
+- 미디어는 **공개 URL** 이 필요하다: Google Drive/Dropbox 공유 링크(Metricool이 자동으로 가져감)가 기본.
+  공개 GitHub 경로를 쓰려면 사용자 동의를 먼저 받는다 (커밋 이력에 영상이 남는다).
+- 시간은 `getBestTimeToPostByNetwork` 로 추천할 수 있다.
+- **게시·예약은 반드시 사용자가 캡션/시간/채널을 확인하고 "올려줘"라고 한 뒤에만** 실행한다.
+  AI 편집 표기(`isAiGenerated`/`isAigc`)는 플랫폼 정책에 맞게 사용자에게 물어 설정한다.
+
+## 하지 말 것
+
+- 원본/결과 영상을 저장소에 커밋하지 않는다 (공개 저장소). `.gitignore` 유지.
+- 저작권 있는 음악을 임의로 넣지 않는다. BGM은 사용자가 준 파일이나 플랫폼 내 음원만.

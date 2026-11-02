@@ -1,0 +1,17 @@
+# 원본/작업/결과 영상은 커밋하지 않는다 (이 저장소는 공개 저장소)
+inbox/
+work/
+output/
+*.mp4
+*.mov
+*.m4v
+*.mp3
+*.wav
+
+# setup.sh 가 내려받는 폰트
+shorts/fonts/*.ttf
+shorts/fonts/*.otf
+
+__pycache__/
+*.pyc
+.DS_Store

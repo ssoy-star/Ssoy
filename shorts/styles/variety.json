@@ -1,0 +1,20 @@
+{
+  "name": "variety",
+  "description": "예능 자막형 — 검은고딕 + 두꺼운 외곽선, 말하는 단어 노랑 하이라이트, 상단 고정 제목. 가로 원본은 검은 배경(레터박스) 배치.",
+  "landscape_layout": "letterbox",
+  "pace": "tight",
+  "zoom": {"mode": "alternate", "amount": 1.12},
+  "caption": {
+    "font": "Black Han Sans", "size": 92,
+    "color": "#FFFFFF", "active_color": "#FFE600", "emphasis_color": "#FF5A5A",
+    "outline_color": "#000000", "outline": 8, "shadow": 0,
+    "max_chars": 14, "max_words": 4, "max_lines": 2, "line_chars": 9,
+    "karaoke": true, "pop": "chunk", "y": 0.68
+  },
+  "title": {
+    "font": "Black Han Sans", "size": 98, "color": "#FFFFFF", "accent_color": "#FFE600",
+    "outline_color": "#000000", "outline": 9, "shadow": 0,
+    "y": 0.10, "mode": "persistent", "hook_seconds": 3.0
+  },
+  "progress_bar": {"enabled": true, "color": "#FFE600", "height": 10}
+}

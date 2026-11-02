@@ -1,0 +1,20 @@
+{
+  "name": "box",
+  "description": "틱톡 박스형 — 흰 박스 위 검정 굵은 글씨, 말하는 단어 빨강. 틱톡 기본 텍스트 감성 + 상단 빨간 박스 제목.",
+  "landscape_layout": "crop",
+  "pace": "tight",
+  "zoom": {"mode": "alternate", "amount": 1.1},
+  "caption": {
+    "font": "Pretendard ExtraBold", "size": 70,
+    "color": "#111111", "active_color": "#FF2D55", "emphasis_color": "#FF2D55",
+    "box": true, "box_color": "#FFFFFF", "outline": 14, "shadow": 0,
+    "max_chars": 16, "max_words": 4, "max_lines": 2, "line_chars": 10,
+    "karaoke": true, "pop": "chunk", "y": 0.70
+  },
+  "title": {
+    "font": "Pretendard ExtraBold", "size": 76, "color": "#FFFFFF", "accent_color": "#FFE600",
+    "box": true, "box_color": "#FF2D55", "outline": 16, "shadow": 0,
+    "y": 0.11, "mode": "persistent", "hook_seconds": 3.0
+  },
+  "progress_bar": {"enabled": true, "color": "#FF2D55", "height": 10}
+}

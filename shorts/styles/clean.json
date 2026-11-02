@@ -1,0 +1,20 @@
+{
+  "name": "clean",
+  "description": "감성 브이로그형 — 프리텐다드 얇은 자막 + 은은한 그림자, 하이라이트 없음, 블러 배경. 일상/카페/여행/뷰티.",
+  "landscape_layout": "blur",
+  "pace": "normal",
+  "zoom": {"mode": "none", "amount": 1.0},
+  "caption": {
+    "font": "Pretendard SemiBold", "size": 60,
+    "color": "#FFFFFF", "active_color": "#FFFFFF", "emphasis_color": "#FFE3EC",
+    "outline_color": "#000000", "outline": 0, "shadow": 3, "shadow_color": "#00000088",
+    "max_chars": 20, "max_words": 6, "max_lines": 2, "line_chars": 15,
+    "karaoke": false, "pop": "fade", "y": 0.78
+  },
+  "title": {
+    "font": "Pretendard ExtraBold", "size": 74, "color": "#FFFFFF", "accent_color": "#FFD1DC",
+    "outline_color": "#000000", "outline": 0, "shadow": 4, "shadow_color": "#00000088",
+    "y": 0.10, "mode": "persistent", "hook_seconds": 3.0
+  },
+  "progress_bar": {"enabled": false}
+}
