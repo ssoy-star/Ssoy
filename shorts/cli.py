@@ -242,6 +242,16 @@ def cmd_background(a):
     print(f"✔ 배경 합성 완료: {out}  ({time.time() - t0:.0f}초)")
 
 
+def cmd_voiceover(a):
+    from .voice import build
+
+    cfg = json.loads(Path(a.config).read_text())
+    t0 = time.time()
+    print("▶ 내레이션 생성·배치:")
+    out = build(cfg, WORK_DIR / "voice" / slug(Path(cfg["output"]).stem))
+    print(f"✔ 완료: {out}  ({time.time() - t0:.0f}초)")
+
+
 def cmd_styles(_a):
     for p in sorted(STYLES_DIR.glob("*.json")):
         s = json.loads(p.read_text())
@@ -300,6 +310,10 @@ def main(argv=None):
     b = sub.add_parser("background", help="사람만 오려 다른 배경에 합성 (설정 JSON)")
     b.add_argument("config")
     b.set_defaults(func=cmd_background)
+
+    v = sub.add_parser("voiceover", help="대본을 장면 시간에 맞춰 목소리로 얹기 (설정 JSON)")
+    v.add_argument("config")
+    v.set_defaults(func=cmd_voiceover)
 
     s = sub.add_parser("styles", help="스타일 목록")
     s.set_defaults(func=cmd_styles)

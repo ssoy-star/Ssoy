@@ -23,6 +23,7 @@
 | 진행바 | 하단 진행바로 끝까지 보게 만드는 리텐션 장치 |
 | 아이폰/아이패드 대응 | HDR(HLG) 영상 색 보정, 세로 회전 메타데이터 처리 |
 | 배경 바꾸기 | AI로 사람만 오려 다른 장소(산 정상, 바다 등) 사진 위에 합성. 구간별로 다른 배경, 인물 색 보정, 바람 소리 |
+| 내레이션 | 대본을 장면 시간에 맞춰 목소리로 얹기 (AI 음성 미리듣기 또는 직접 녹음 파일), 야호 메아리 |
 | 레퍼런스 분석 | 잘 나가는 쇼츠의 컷 속도·훅 속도·음량 수치화 + 프레임 시트 → 커스텀 스타일로 저장 |
 | 결과물 | MP4(1080×1920, H.264/AAC), 커버 이미지, SRT 자막 |
 
@@ -61,6 +62,7 @@ python3 -m shorts edit inbox/raw.mp4 --style variety \
 python3 -m shorts edit inbox/raw.mp4 --plan work/raw/plan.json   # 계획 파일로 재렌더
 python3 -m shorts analyze refs/hot.mp4 --transcript               # 레퍼런스 분석
 python3 -m shorts background work/raw/bg.json                     # 배경 바꾸기 (설정 예: 아래)
+python3 -m shorts voiceover work/raw/voice.json                  # 대본 목소리 얹기
 python3 -m shorts styles                                          # 스타일 목록
 ```
 
