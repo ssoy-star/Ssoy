@@ -199,7 +199,7 @@ def title_text(title, tcfg):
     return "\\N".join(out)
 
 
-def write_ass(path, chunks, style, geom, duration, title=None):
+def write_ass(path, chunks, style, geom, duration, title=None, overlays=None):
     cap = style["caption"]
     tcfg = style.get("title", {})
     cbox = cap.get("box", False)
@@ -220,6 +220,12 @@ def write_ass(path, chunks, style, geom, duration, title=None):
         border_style=3 if tbox else 1, spacing=tcfg.get("spacing", 0),
     )
 
+    titlebox_style = _style_line(
+        "TitleBox", tcfg.get("font", cap["font"]), tcfg.get("size", 96),
+        ass_color(tcfg.get("color", "#FFFFFF")), ass_color(tcfg.get("box_color", "#000000")),
+        ass_color("#00000000"), 14, 0, border_style=3, spacing=tcfg.get("spacing", 0),
+    )
+
     lines = [
         "[Script Info]",
         "ScriptType: v4.00+",
@@ -235,6 +241,7 @@ def write_ass(path, chunks, style, geom, duration, title=None):
         "BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding",
         cap_style,
         title_style,
+        titlebox_style,
         "",
         "[Events]",
         "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text",
@@ -249,6 +256,9 @@ def write_ass(path, chunks, style, geom, duration, title=None):
             anim += "\\fad(0,250)"
         lines.append(f"Dialogue: 1,{ass_time(0)},{ass_time(end)},Title,,0,0,0,,"
                      f"{{\\an{an}\\pos({x},{y}){anim}}}{title_text(title, tcfg)}")
+
+    for ov in overlays or []:
+        lines.append(overlay_event(ov, tcfg))
 
     an, x, y = geom["caption_pos"]
     for c in chunks:
@@ -268,6 +278,75 @@ def write_ass(path, chunks, style, geom, duration, title=None):
                          f"{{{pre}}}{_chunk_text(c, -1, cap, True)}")
 
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+# ---------- 시간 지정 텍스트 오버레이 (말 없는 영상의 문구, 인트로 훅 등) ----------
+
+OVERLAY_ANIMS = {
+    "pop": "\\fscx70\\fscy70\\t(0,90,\\fscx110\\fscy110)\\t(90,170,\\fscx100\\fscy100)",
+    "fade": "",
+    "none": "",
+}
+
+
+def resolve_overlays(texts, segments):
+    """plan 의 texts 를 편집본 시간으로 바꾼다.
+
+    각 항목: {"text": "겨울 코디|*아직도* 고민해?", "cut": 0 또는 [1, 3] (컷 번호, 0부터)
+              또는 "start"/"end"(초), "delay"(컷 시작 후 몇 초 뒤 등장), "y": 0~1, "x": 0~1, "an": 5, "size", "font", "color",
+              "accent_color", "outline", "outline_color", "box", "box_color",
+              "anim": pop|drop|fade|none, "fade_out": 초}
+    """
+    offsets, t = [], 0.0
+    for s, e in segments:
+        offsets.append((t, t + e - s))
+        t += e - s
+    out = []
+    for ov in texts or []:
+        ov = dict(ov)
+        if "cut" in ov:
+            c = ov["cut"]
+            a, b = (c, c) if isinstance(c, int) else (c[0], c[1])
+            if not (0 <= a <= b < len(offsets)):
+                raise ValueError(f"texts 의 cut {c} 가 컷 범위(0~{len(offsets) - 1})를 벗어납니다")
+            ov.setdefault("start", offsets[a][0])
+            ov.setdefault("end", offsets[b][1])
+        ov["start"] = float(ov.get("start", 0.0)) + float(ov.get("delay", 0.0))
+        ov["end"] = float(ov.get("end", t))
+        out.append(ov)
+    return out
+
+
+def overlay_event(ov, tcfg):
+    cfg = {**tcfg, **{k: ov[k] for k in ("color", "accent_color") if k in ov}}
+    an = ov.get("an", 5)
+    x = int(ov.get("x", 0.5) * PLAY_W)
+    y = int(ov.get("y", 0.5) * PLAY_H)
+    tags = [f"\\an{an}"]
+    anim = ov.get("anim", "pop")
+    if anim == "drop":  # 위에서 툭 떨어지듯 등장
+        tags.append(f"\\move({x},{y - 70},{x},{y},0,160)")
+    else:
+        tags.append(f"\\pos({x},{y})" + OVERLAY_ANIMS.get(anim, ""))
+    fin = {"drop": 120, "fade": 150}.get(anim, 0)
+    fout = int(float(ov.get("fade_out", 0)) * 1000)
+    if fin or fout:
+        tags.append(f"\\fad({fin},{fout})")
+    if "font" in ov:
+        tags.append(f"\\fn{ov['font']}")
+    if "size" in ov:
+        tags.append(f"\\fs{ov['size']}")
+    box = ov.get("box", False)
+    if box:
+        tags.append(f"\\3c{inline_color(ov.get('box_color', '#000000'))}\\bord{ov.get('outline', 14)}")
+    else:
+        if "outline" in ov:
+            tags.append(f"\\bord{ov['outline']}")
+        if "outline_color" in ov:
+            tags.append(f"\\3c{inline_color(ov['outline_color'])}")
+    style = "TitleBox" if box else "Title"
+    return (f"Dialogue: {ov.get('layer', 3)},{ass_time(ov['start'])},{ass_time(ov['end'])},{style},,0,0,0,,"
+            f"{{{''.join(tags)}}}{title_text(ov['text'], cfg)}")
 
 
 def write_srt(path, chunks):

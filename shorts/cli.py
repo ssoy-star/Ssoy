@@ -21,7 +21,7 @@ from .probe import probe
 
 PLAN_KEYS = ["style", "title", "layout", "pace", "ranges", "emphasis", "replace", "bgm",
              "bgm_db", "zoom", "zoom_amount", "model", "vocab", "face", "cut_fillers",
-             "title_mode", "style_overrides", "zooms", "audio"]
+             "title_mode", "style_overrides", "zooms", "audio", "texts"]
 
 
 def slug(name):
@@ -164,7 +164,8 @@ def cmd_edit(a):
 
     wd = workdir_for(video)
     ass_path, srt_path = wd / "captions.ass", wd / "captions.srt"
-    captions.write_ass(ass_path, chunks, style, geom, duration, plan.get("title"))
+    overlays = captions.resolve_overlays(plan.get("texts"), segments)
+    captions.write_ass(ass_path, chunks, style, geom, duration, plan.get("title"), overlays)
     captions.write_srt(srt_path, chunks)
 
     W, H = (720, 1280) if a.draft else (render.OUT_W, render.OUT_H)
