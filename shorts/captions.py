@@ -293,7 +293,7 @@ def resolve_overlays(texts, segments):
     """plan 의 texts 를 편집본 시간으로 바꾼다.
 
     각 항목: {"text": "겨울 코디|*아직도* 고민해?", "cut": 0 또는 [1, 3] (컷 번호, 0부터)
-              또는 "start"/"end"(초), "delay"(컷 시작 후 몇 초 뒤 등장), "y": 0~1, "x": 0~1, "an": 5, "size", "font", "color",
+              또는 "start"/"end"(초), "delay"(컷 시작 후 몇 초 뒤 등장), "duration"(보이는 시간), "y": 0~1, "x": 0~1, "an": 5, "size", "font", "color",
               "accent_color", "outline", "outline_color", "box", "box_color",
               "anim": pop|drop|fade|none, "fade_out": 초}
     """
@@ -313,6 +313,8 @@ def resolve_overlays(texts, segments):
             ov.setdefault("end", offsets[b][1])
         ov["start"] = float(ov.get("start", 0.0)) + float(ov.get("delay", 0.0))
         ov["end"] = float(ov.get("end", t))
+        if "duration" in ov:  # 등장 후 몇 초만 보이기 (예: 강조색 → 흰색 전환)
+            ov["end"] = min(ov["end"], ov["start"] + float(ov["duration"]))
         out.append(ov)
     return out
 
