@@ -138,6 +138,7 @@ def cmd_edit(a):
     if len(speeds) != len(segments) or min(speeds) < 0.5 or max(speeds) > 2.0:
         sys.exit(f"speeds 는 컷 개수({len(segments)})만큼, 0.5~2.0 사이로 적어주세요.")
     out_words, duration = edit.map_words(words, segments, cut_fillers, speeds)
+    duration += float((plan.get("fx") or {}).get("freeze_end", 0))  # 끝 장면 정지
 
     zcfg = style.get("zoom", {})
     zmode = plan.get("zoom") or zcfg.get("mode", "alternate")

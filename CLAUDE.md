@@ -43,8 +43,10 @@
 - 결과를 whisper 로 다시 받아써서 알아들을 수 있는지 확인한다 (너무 빠른 구간 점검).
 - 효과음(퍽 등)은 줄에 `"file"` + `"fixed": true` 로 화면 타격 순간에 고정하면, 앞 대사가 그 전에 끝나도록 자동으로 맞춘다.
   대사엔 `"reverb": true`(영화 대사 공간감), 줄별 `"gain_db"`.
+- 자연스러운 대사: 배속(x1.2 이상)이 걸리면 어색하다. 긴 쉼이 생기는 첫 단어("뭐?")는 따로 줄로 떼고,
+  rate 는 +0% 기본. 사용자는 울림(reverb) 없는, 조금 낮은 톤(pitch -10Hz)을 선호.
 - 영화 느낌은 edit plan 의 `fx`: `{"hits": [초...], "shake": 14, "flash": 0.18, "vignette": true, "grain": 3,
-  "letterbox": 0.065}`. 그레인이 크면 용량이 급증하니 3 정도로. 작은 영화 자막은 texts 에 font=Pretendard SemiBold, size 46, y 0.815.
+  "letterbox": 0.065, "freeze_end": 1.2}`(끝 장면 정지 후 마무리 대사). 그레인이 크면 용량이 급증하니 3 정도로. 작은 영화 자막은 texts 에 font=Pretendard SemiBold, size 46, y 0.815.
 
 ## 배경 바꾸기 (장소 합성)
 

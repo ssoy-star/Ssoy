@@ -47,7 +47,7 @@ def fx_chain(fx, W, H):
     """영화 느낌 효과: 타격 순간 화면 흔들림·번쩍임, 비네팅, 필름 그레인, 위아래 검은 띠.
 
     fx = {"hits": [3.35, 6.7], "shake": 14, "flash": 0.22, "vignette": true, "grain": 7,
-          "letterbox": 0.065}
+          "letterbox": 0.065, "freeze_end": 1.2}
     """
     if not fx:
         return ""
@@ -133,7 +133,11 @@ def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, dura
 
     vlast = "vs"
     fxc = fx_chain(fx, W, H)
-    g.append(f"[cv]{fxc + ',' if fxc else ''}ass={q(ass_path)}:fontsdir={q(fonts_dir)}[vs]")
+    freeze = float((fx or {}).get("freeze_end", 0))
+    pre_fx = f"tpad=stop_mode=clone:stop_duration={freeze:.3f}," if freeze > 0 else ""
+    g.append(f"[cv]{pre_fx}{fxc + ',' if fxc else ''}ass={q(ass_path)}:fontsdir={q(fonts_dir)}[vs]")
+    if freeze > 0:
+        g.append(f"[ca]apad=pad_dur={freeze:.3f}[ca2]")
     bar = style.get("progress_bar", {})
     if bar.get("enabled", True):
         bh = max(2, int(bar.get("height", 10) * k))
@@ -143,6 +147,7 @@ def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, dura
         vlast = "vb"
     g.append(f"[{vlast}]format=yuv420p[vout]")
 
+    ca = "ca2" if freeze > 0 else "ca"
     # 거의 무음인 원본을 -14 LUFS로 올리면 방 잡음이 크게 들리므로 모드로 고른다
     norm = {
         "normalize": "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000",
@@ -154,11 +159,11 @@ def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, dura
         g.append("[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,"
                  f"atrim=duration={duration:.3f},volume={bgm_db}dB,"
                  f"afade=t=in:d=0.5,afade=t=out:st={fo:.3f}:d=1.5[bgm]")
-        g.append("[ca]asplit=2[voice][key]")
+        g.append(f"[{ca}]asplit=2[voice][key]")
         g.append("[bgm][key]sidechaincompress=threshold=0.02:ratio=6:attack=15:release=400[duck]")
         g.append(f"[voice][duck]amix=inputs=2:duration=first:dropout_transition=0:normalize=0,{norm}[aout]")
     else:
-        g.append(f"[ca]{norm}[aout]")
+        g.append(f"[{ca}]{norm}[aout]")
     return ";\n".join(g) + "\n"
 
 

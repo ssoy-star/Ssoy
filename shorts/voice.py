@@ -71,7 +71,7 @@ def schedule(lines, durations, video_len):
             tempo = min(MAX_TEMPO, d / window)
         end = start + d / tempo
         plan.append({"start": round(start, 3), "tempo": round(tempo, 3), "end": round(end, 3)})
-        prev_end = end
+        prev_end = min(end, start + 0.2) if ln.get("fixed") else end
     return plan
 
 
