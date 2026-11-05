@@ -11,6 +11,7 @@ output/
 # setup.sh 가 내려받는 폰트
 shorts/fonts/*.ttf
 shorts/fonts/*.otf
+shorts/models/
 
 __pycache__/
 *.pyc

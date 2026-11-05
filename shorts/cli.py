@@ -230,6 +230,14 @@ def cmd_fetch(a):
             print(f"✔ 받음: {p}  (영상이 아니거나 읽을 수 없음)")
 
 
+def cmd_background(a):
+    from .matte import run_config
+
+    t0 = time.time()
+    out = run_config(a.config)
+    print(f"✔ 배경 합성 완료: {out}  ({time.time() - t0:.0f}초)")
+
+
 def cmd_styles(_a):
     for p in sorted(STYLES_DIR.glob("*.json")):
         s = json.loads(p.read_text())
@@ -284,6 +292,10 @@ def main(argv=None):
     f.add_argument("url")
     f.add_argument("--dest")
     f.set_defaults(func=cmd_fetch)
+
+    b = sub.add_parser("background", help="사람만 오려 다른 배경에 합성 (설정 JSON)")
+    b.add_argument("config")
+    b.set_defaults(func=cmd_background)
 
     s = sub.add_parser("styles", help="스타일 목록")
     s.set_defaults(func=cmd_styles)

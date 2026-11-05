@@ -21,6 +21,7 @@
 | 말 없는 영상 | 코디·챌린지처럼 말소리가 없으면 무음 컷/음량 증폭을 자동으로 끄고, 고른 구간만 이어붙임 |
 | 진행바 | 하단 진행바로 끝까지 보게 만드는 리텐션 장치 |
 | 아이폰/아이패드 대응 | HDR(HLG) 영상 색 보정, 세로 회전 메타데이터 처리 |
+| 배경 바꾸기 | AI로 사람만 오려 다른 장소(산 정상, 바다 등) 사진 위에 합성. 구간별로 다른 배경, 인물 색 보정, 바람 소리 |
 | 레퍼런스 분석 | 잘 나가는 쇼츠의 컷 속도·훅 속도·음량 수치화 + 프레임 시트 → 커스텀 스타일로 저장 |
 | 결과물 | MP4(1080×1920, H.264/AAC), 커버 이미지, SRT 자막 |
 
@@ -58,6 +59,7 @@ python3 -m shorts edit inbox/raw.mp4 --style variety \
   --ranges "0:41-0:52,0:03-0:30" --replace "슈츠=쇼츠" --draft
 python3 -m shorts edit inbox/raw.mp4 --plan work/raw/plan.json   # 계획 파일로 재렌더
 python3 -m shorts analyze refs/hot.mp4 --transcript               # 레퍼런스 분석
+python3 -m shorts background work/raw/bg.json                     # 배경 바꾸기 (설정 예: 아래)
 python3 -m shorts styles                                          # 스타일 목록
 ```
 
@@ -70,3 +72,20 @@ python3 -m shorts styles                                          # 스타일 �
 
 `setup.sh` 가 다음 무료 폰트를 내려받습니다 (모두 SIL Open Font License):
 Black Han Sans(검은고딕), Jua, Do Hyeon — Google Fonts / Pretendard — orioncactus.
+
+## 배경 바꾸기 설정 예시
+
+```json
+{
+ "source": "inbox/raw.mov",
+ "output": "work/raw/raw_bg.mp4",
+ "default": {"image": "bg/vista.jpg", "x": 0.8, "y": 0.5, "blur": 2.0, "saturation": 0.92},
+ "backgrounds": [{"from": 15.8, "to": 17.3, "image": "bg/summit.jpg", "x": 0.26, "blur": 1.2}],
+ "fg_grade": {"gain": [1.04, 1.0, 0.96], "brightness": 0.03, "contrast": 1.06},
+ "ambience": "wind"
+}
+```
+
+`x`/`y` 는 배경 사진에서 9:16 창을 어디서 자를지(0~1), `backgrounds` 는 원본 시간 구간별 배경.
+결과 영상을 `python3 -m shorts edit` 에 넣어 컷 편집을 이어서 한다.
+배경 사진은 저작권을 확인한다 (퍼블릭 도메인/CC0 우선, CC BY 계열은 게시물에 출처 표기).

@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 command -v ffmpeg >/dev/null || { echo "ffmpeg 가 필요합니다"; exit 1; }
 
-if ! python3 -c "import faster_whisper, cv2, gdown" 2>/dev/null; then
+if ! python3 -c "import faster_whisper, cv2, gdown, onnxruntime" 2>/dev/null; then
   echo "▶ 파이썬 패키지 설치…"
   pip install -q -r requirements.txt
 fi
@@ -19,6 +19,12 @@ get Jua-Regular.ttf          "$CDN/google/fonts@main/ofl/jua/Jua-Regular.ttf"
 get DoHyeon-Regular.ttf      "$CDN/google/fonts@main/ofl/dohyeon/DoHyeon-Regular.ttf"
 get Pretendard-ExtraBold.otf "$CDN/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-ExtraBold.otf"
 get Pretendard-SemiBold.otf  "$CDN/orioncactus/pretendard@v1.3.9/packages/pretendard/dist/public/static/Pretendard-SemiBold.otf"
+
+# 배경 바꾸기(사람 오려내기) 모델 — RobustVideoMatting (GPL-3.0)
+MODEL=shorts/models/rvm_mobilenetv3_fp32.onnx
+mkdir -p shorts/models
+[ -s "$MODEL" ] || { echo "▶ 매팅 모델"; curl -fsSL --retry 3 -o "$MODEL" \
+  https://github.com/PeterL1n/RobustVideoMatting/releases/download/v1.0.0/rvm_mobilenetv3_fp32.onnx; }
 
 mkdir -p inbox work output
 echo "✔ 준비 완료 — python3 -m shorts styles"
