@@ -44,7 +44,7 @@ def geometry(layout, info, style, W=OUT_W, H=OUT_H):
 
 
 def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, duration,
-                 style, has_bgm=False, bgm_db=-20, W=OUT_W, H=OUT_H):
+                 style, has_bgm=False, bgm_db=-20, W=OUT_W, H=OUT_H, audio_mode="normalize"):
     n = len(segments)
     sw, sh = info["width"], info["height"]
     k = W / OUT_W  # 드래프트(저해상도) 배율
@@ -102,7 +102,12 @@ def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, dura
         vlast = "vb"
     g.append(f"[{vlast}]format=yuv420p[vout]")
 
-    norm = "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000"
+    # 거의 무음인 원본을 -14 LUFS로 올리면 방 잡음이 크게 들리므로 모드로 고른다
+    norm = {
+        "normalize": "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000",
+        "keep": "aresample=48000",
+        "mute": "volume=0,aresample=48000",
+    }.get(audio_mode, "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000")
     if has_bgm:
         fo = max(0.0, duration - 1.5)
         g.append("[1:a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,"

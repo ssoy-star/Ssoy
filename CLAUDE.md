@@ -9,7 +9,8 @@
 
 ## 편집 절차
 
-1. **원본 받기**: 사용자가 준 Drive/Dropbox/직접 링크 → `python3 -m shorts fetch "<url>"` → `inbox/`.
+1. **원본 받기**: 사용자가 준 Drive(파일·폴더)/Dropbox/직접 링크 → `python3 -m shorts fetch "<url>"` → `inbox/`.
+   Claude 앱 첨부는 30MB 제한이라 큰 원본은 항상 링크로 받는다. 받은 직후 프레임 시트를 뽑아 내용을 직접 본다.
    Google Drive/Dropbox 커넥터가 연결돼 있으면 그걸로 찾아 받아도 된다.
 2. **대본**: `python3 -m shorts transcribe inbox/<file>` → `work/<name>/transcript.txt` 를 읽는다.
    한국어 정확도가 아쉬우면 `--model medium` (느리지만 정확).
@@ -19,6 +20,9 @@
    - 제목: 2줄 이내, 줄당 12자 이내, 핵심어는 `*별표*` 로 강조, `|` 로 줄바꿈.
    - ASR 오타는 `replace` 로 교정, 강조 단어는 `emphasis`.
    - 스타일 선택: 토크/정보 → `pop` 또는 `variety`, 예능 클립 → `variety`, 일상 → `clean`, 틱톡 감성 → `box`.
+   - **말소리가 없는 영상**(코디·챌린지·립싱크): 무음 컷과 음량 증폭이 자동으로 꺼진다. 0.5초 간격 프레임 시트를 보고
+     좋은 동작만 `ranges` 로 고르고(컷당 1~2초), 전신이 보여야 하므로 `zoom: none` + 디테일 컷만 `zooms` 로 확대.
+     용도(코디/챌린지/광고/상황극)·음악·문구는 사용자에게 먼저 묻는다.
    - 결정 내용을 `work/<name>/plan.json` 으로 저장 (예시: `shorts/plan.example.json`).
 4. **미리보기**: `python3 -m shorts edit inbox/<file> --plan work/<name>/plan.json --draft`
    → 결과 프레임을 몇 장 뽑아 직접 확인한 뒤 `SendUserFile` 로 MP4 + 커버를 보낸다.

@@ -5,7 +5,7 @@ cd "$(dirname "$0")"
 
 command -v ffmpeg >/dev/null || { echo "ffmpeg 가 필요합니다"; exit 1; }
 
-if ! python3 -c "import faster_whisper, cv2" 2>/dev/null; then
+if ! python3 -c "import faster_whisper, cv2, gdown" 2>/dev/null; then
   echo "▶ 파이썬 패키지 설치…"
   pip install -q -r requirements.txt
 fi

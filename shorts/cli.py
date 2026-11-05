@@ -21,7 +21,7 @@ from .probe import probe
 
 PLAN_KEYS = ["style", "title", "layout", "pace", "ranges", "emphasis", "replace", "bgm",
              "bgm_db", "zoom", "zoom_amount", "model", "vocab", "face", "cut_fillers",
-             "title_mode", "style_overrides"]
+             "title_mode", "style_overrides", "zooms", "audio"]
 
 
 def slug(name):
@@ -124,6 +124,9 @@ def cmd_edit(a):
     words = tr["words"]
 
     pace = plan.get("pace") or style.get("pace", "tight")
+    if not words and not plan.get("pace"):
+        pace = "off"  # 말이 없는 영상(음원 입힐 챌린지·코디 영상)은 무음 기준으로 자르지 않는다
+        print("  말소리가 없어 무음 컷을 끕니다 (원하면 --ranges 로 구간 지정).", flush=True)
     silences = edit.detect_silences(video) if info["has_audio"] and pace != "off" else []
     ranges = edit.parse_ranges(plan.get("ranges"))
     cut_fillers = plan.get("cut_fillers", True)
@@ -137,13 +140,23 @@ def cmd_edit(a):
     zmode = plan.get("zoom") or zcfg.get("mode", "alternate")
     zamt = float(plan.get("zoom_amount") or zcfg.get("amount", 1.12))
     zooms = reframe.zoom_pattern(len(segments), zmode, zamt)
+    if plan.get("zooms"):  # 컷별 줌 직접 지정 (예: 디테일 컷만 확대)
+        explicit = [float(z) for z in plan["zooms"]]
+        if len(explicit) != len(segments):
+            sys.exit(f"zooms 개수({len(explicit)})가 컷 개수({len(segments)})와 다릅니다. "
+                     "말소리 컷이 켜져 있으면 컷 수가 바뀌니 --pace off 와 함께 쓰세요.")
+        zooms = explicit
 
     layout = render.resolve_layout(plan.get("layout"), info, style)
-    use_face = plan.get("face", True) and layout == "crop" and info["aspect"] > 0.8
+    # 가로 원본을 세로로 자를 때, 또는 세로 원본이라도 확대 컷이 있을 때 얼굴 위치를 찾는다
+    use_face = (plan.get("face", True) and layout == "crop"
+                and (info["aspect"] > 0.8 or max(zooms) > 1.0))
     centers = (reframe.face_centers(video, segments) if use_face
                else [reframe.DEFAULT_CENTER] * len(segments))
     if layout == "crop" and not use_face:
         centers = [(0.5, 0.5)] * len(segments)
+
+    audio_mode = plan.get("audio") or ("normalize" if words else "keep")
 
     geom = render.geometry(layout, info, style)
     chunks = captions.build_chunks(out_words, style["caption"], parse_kv(plan.get("replace")),
@@ -158,7 +171,8 @@ def cmd_edit(a):
     bgm = plan.get("bgm")
     fgraph = render.build_filter(info, segments, zooms, centers, geom, ass_path, FONTS_DIR,
                                  duration, style, has_bgm=bool(bgm),
-                                 bgm_db=float(plan.get("bgm_db", -20)), W=W, H=H)
+                                 bgm_db=float(plan.get("bgm_db", -20)), W=W, H=H,
+                                 audio_mode=audio_mode)
     fpath = wd / "filter.txt"
     fpath.write_text(fgraph)
 
@@ -174,7 +188,8 @@ def cmd_edit(a):
     (OUTPUT_DIR / f"{name}.srt").write_text(srt_path.read_text())
 
     resolved = {"source": str(video), **plan, "style": style["name"], "layout": layout,
-                "pace": pace, "zoom": zmode, "zoom_amount": zamt, "model": model}
+                "pace": pace, "zoom": zmode, "zoom_amount": zamt, "model": model,
+                "zooms": zooms, "audio": audio_mode}
     (wd / "plan.json").write_text(json.dumps(resolved, ensure_ascii=False, indent=1))
     report = {
         "output": str(out_mp4), "cover": str(cover),
@@ -206,10 +221,13 @@ def cmd_analyze(a):
 def cmd_fetch(a):
     from .fetch import fetch
 
-    p = fetch(a.url, Path(a.dest) if a.dest else INBOX_DIR)
-    info = probe(p)
-    print(f"✔ 받음: {p}  ({info['width']}x{info['height']}, {info['duration']:.1f}s, "
-          f"{'HDR' if info['hdr'] else 'SDR'})")
+    for p in fetch(a.url, Path(a.dest) if a.dest else INBOX_DIR):
+        try:
+            info = probe(p)
+            print(f"✔ 받음: {p}  ({info['width']}x{info['height']}, {info['duration']:.1f}s, "
+                  f"{'HDR' if info['hdr'] else 'SDR'}, {p.stat().st_size / 1e6:.0f}MB)")
+        except Exception:
+            print(f"✔ 받음: {p}  (영상이 아니거나 읽을 수 없음)")
 
 
 def cmd_styles(_a):
@@ -243,6 +261,10 @@ def main(argv=None):
     e.add_argument("--bgm-db", dest="bgm_db", type=float)
     e.add_argument("--zoom", choices=["alternate", "punch", "none"])
     e.add_argument("--zoom-amount", dest="zoom_amount", type=float)
+    e.add_argument("--zooms", type=lambda s: [float(x) for x in s.split(",")],
+                   help="컷별 줌 직접 지정. 예: '1,1,1.3,1' (--ranges 와 개수 맞춤)")
+    e.add_argument("--audio", choices=["normalize", "keep", "mute"],
+                   help="normalize=-14LUFS(말 있는 영상 기본), keep=원본 그대로(말 없는 영상 기본), mute=무음")
     e.add_argument("--model", help="whisper 모델 (기본 small)")
     e.add_argument("--vocab", help="인식 힌트 단어 (쉼표 구분)")
     e.add_argument("--no-face", dest="face", action="store_false", default=None)
