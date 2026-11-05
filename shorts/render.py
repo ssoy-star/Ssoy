@@ -44,7 +44,8 @@ def geometry(layout, info, style, W=OUT_W, H=OUT_H):
 
 
 def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, duration,
-                 style, has_bgm=False, bgm_db=-20, W=OUT_W, H=OUT_H, audio_mode="normalize"):
+                 style, has_bgm=False, bgm_db=-20, W=OUT_W, H=OUT_H, audio_mode="normalize",
+                 speeds=None):
     n = len(segments)
     sw, sh = info["width"], info["height"]
     k = W / OUT_W  # 드래프트(저해상도) 배율
@@ -60,9 +61,12 @@ def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, dura
                  "aformat=sample_fmts=fltp:channel_layouts=stereo,"
                  f"asplit={n}" + "".join(f"[a{i}]" for i in range(n)))
 
-    for i, ((s, e), z, c) in enumerate(zip(segments, zooms, centers)):
-        d = e - s
+    speeds = speeds or [1.0] * n
+    for i, ((s, e), z, c, sp) in enumerate(zip(segments, zooms, centers, speeds)):
+        d = (e - s) / sp  # 편집본에서의 길이
         trim = f"[v{i}]trim=start={s:.3f}:end={e:.3f},setpts=PTS-STARTPTS"
+        if sp != 1.0:  # 배속: 화면은 타임스탬프를 줄이고 30fps로 다시 맞춘다
+            trim += f",setpts=PTS/{sp:.4f},fps=30"
         if layout == "crop":
             cw, ch, x, y = crop_box(sw, sh, OUT_W / OUT_H, c, z)
             g.append(f"{trim},crop={cw}:{ch}:{x}:{y},scale={W}:{H}:flags=lanczos,setsar=1[sv{i}]")
@@ -81,7 +85,8 @@ def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, dura
                 g.append(f"{trim},{fg},pad={W}:{H}:0:{fy}:color=black[sv{i}]")
         if info["has_audio"]:
             fade = min(0.012, d / 4)
-            g.append(f"[a{i}]atrim=start={s:.3f}:end={e:.3f},asetpts=PTS-STARTPTS,"
+            tempo = f"atempo={sp:.4f}," if sp != 1.0 else ""
+            g.append(f"[a{i}]atrim=start={s:.3f}:end={e:.3f},asetpts=PTS-STARTPTS,{tempo}"
                      f"afade=t=in:st=0:d={fade:.3f},afade=t=out:st={d - fade:.3f}:d={fade:.3f}[sa{i}]")
         else:
             g.append(f"anullsrc=r=48000:cl=stereo,atrim=duration={d:.3f}[sa{i}]")

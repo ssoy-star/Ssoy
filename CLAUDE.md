@@ -25,6 +25,8 @@
      용도(코디/챌린지/광고/상황극)·음악·문구는 사용자에게 먼저 묻는다.
    - 문구(훅·인트로 멘트)는 plan 의 `texts` 로 컷마다 띄운다: `{"text": "*강조* 문구|둘째 줄", "cut": 0, "y": 0.6,
      "anim": "pop|drop|fade|none", "delay": 0.3}`. 얼굴을 가리지 않는 높이(보통 0.55~0.78)로 두고 프레임으로 확인.
+   - 컷별 배속은 `speeds`(예: `[1.2, 1, 1]`). 사용자가 직접 배속을 건 러프컷을 다시 만들 때 원본과 타이밍을 맞추는 데 쓴다.
+   - 러프컷에 문구가 구워져(burned-in) 있으면 편집으로 못 지운다 → 글씨 없는 원본에서 같은 구간을 프레임 매칭으로 찾아 다시 만든다.
    - 결정 내용을 `work/<name>/plan.json` 으로 저장 (예시: `shorts/plan.example.json`).
 4. **미리보기**: `python3 -m shorts edit inbox/<file> --plan work/<name>/plan.json --draft`
    → 결과 프레임을 몇 장 뽑아 직접 확인한 뒤 `SendUserFile` 로 MP4 + 커버를 보낸다.

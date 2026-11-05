@@ -65,7 +65,7 @@ python3 -m shorts styles                                          # 스타일 �
 ```
 
 주요 옵션: `--layout crop|letterbox|blur`, `--pace tight|normal|loose|off`, `--zoom alternate|punch|none`,
-`--zooms "1,1,1.3,1"`(컷별 줌 직접 지정), `--audio normalize|keep|mute`,
+`--zooms "1,1,1.3,1"`(컷별 줌 직접 지정), plan 의 `speeds`(컷별 배속 0.5~2.0), `--audio normalize|keep|mute`,
 `--emphasis "단어1,단어2"`, `--bgm music.mp3 --bgm-db -20`, `--title-mode persistent|hook`, `--model medium`.
 계획 파일 예시는 [`shorts/plan.example.json`](shorts/plan.example.json).
 

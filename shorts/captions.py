@@ -289,7 +289,7 @@ OVERLAY_ANIMS = {
 }
 
 
-def resolve_overlays(texts, segments):
+def resolve_overlays(texts, segments, speeds=None):
     """plan 의 texts 를 편집본 시간으로 바꾼다.
 
     각 항목: {"text": "겨울 코디|*아직도* 고민해?", "cut": 0 또는 [1, 3] (컷 번호, 0부터)
@@ -297,10 +297,11 @@ def resolve_overlays(texts, segments):
               "accent_color", "outline", "outline_color", "box", "box_color",
               "anim": pop|drop|fade|none, "fade_out": 초}
     """
+    speeds = speeds or [1.0] * len(segments)
     offsets, t = [], 0.0
-    for s, e in segments:
-        offsets.append((t, t + e - s))
-        t += e - s
+    for (s, e), sp in zip(segments, speeds):
+        offsets.append((t, t + (e - s) / sp))
+        t += (e - s) / sp
     out = []
     for ov in texts or []:
         ov = dict(ov)

@@ -124,18 +124,20 @@ def plan_segments(duration, words, ranges=None, silences=None, pace="tight",
     return segments
 
 
-def map_words(words, segments, cut_fillers=True):
-    """원본 시간의 단어를 편집본 시간축으로 옮긴다. 반환: (words, 총 길이)."""
+def map_words(words, segments, cut_fillers=True, speeds=None):
+    """원본 시간의 단어를 편집본 시간축으로 옮긴다. 반환: (words, 총 길이). speeds: 컷별 배속."""
+    speeds = speeds or [1.0] * len(segments)
     offsets, t = [], 0.0
-    for s, e in segments:
+    for (s, e), sp in zip(segments, speeds):
         offsets.append(t)
-        t += e - s
+        t += (e - s) / sp
     total = t
 
     def place(w, i):
         s, e = segments[i]
-        ns = offsets[i] + min(max(w["start"], s), e) - s
-        ne = offsets[i] + min(max(w["end"], s), e) - s
+        sp = speeds[i]
+        ns = offsets[i] + (min(max(w["start"], s), e) - s) / sp
+        ne = offsets[i] + (min(max(w["end"], s), e) - s) / sp
         ne = max(ne, ns + 0.12)
         return {**w, "start": round(ns, 3), "end": round(ne, 3), "seg": i}
 

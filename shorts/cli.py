@@ -21,7 +21,7 @@ from .probe import probe
 
 PLAN_KEYS = ["style", "title", "layout", "pace", "ranges", "emphasis", "replace", "bgm",
              "bgm_db", "zoom", "zoom_amount", "model", "vocab", "face", "cut_fillers",
-             "title_mode", "style_overrides", "zooms", "audio", "texts"]
+             "title_mode", "style_overrides", "zooms", "audio", "texts", "speeds"]
 
 
 def slug(name):
@@ -134,7 +134,10 @@ def cmd_edit(a):
     if not segments:
         sys.exit("남길 구간이 없습니다. --ranges 또는 --pace off 를 확인하세요.")
 
-    out_words, duration = edit.map_words(words, segments, cut_fillers)
+    speeds = [float(x) for x in plan["speeds"]] if plan.get("speeds") else [1.0] * len(segments)
+    if len(speeds) != len(segments) or min(speeds) < 0.5 or max(speeds) > 2.0:
+        sys.exit(f"speeds 는 컷 개수({len(segments)})만큼, 0.5~2.0 사이로 적어주세요.")
+    out_words, duration = edit.map_words(words, segments, cut_fillers, speeds)
 
     zcfg = style.get("zoom", {})
     zmode = plan.get("zoom") or zcfg.get("mode", "alternate")
@@ -164,7 +167,7 @@ def cmd_edit(a):
 
     wd = workdir_for(video)
     ass_path, srt_path = wd / "captions.ass", wd / "captions.srt"
-    overlays = captions.resolve_overlays(plan.get("texts"), segments)
+    overlays = captions.resolve_overlays(plan.get("texts"), segments, speeds)
     captions.write_ass(ass_path, chunks, style, geom, duration, plan.get("title"), overlays)
     captions.write_srt(srt_path, chunks)
 
@@ -173,7 +176,7 @@ def cmd_edit(a):
     fgraph = render.build_filter(info, segments, zooms, centers, geom, ass_path, FONTS_DIR,
                                  duration, style, has_bgm=bool(bgm),
                                  bgm_db=float(plan.get("bgm_db", -20)), W=W, H=H,
-                                 audio_mode=audio_mode)
+                                 audio_mode=audio_mode, speeds=speeds)
     fpath = wd / "filter.txt"
     fpath.write_text(fgraph)
 
