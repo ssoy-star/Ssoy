@@ -21,7 +21,7 @@ from .probe import probe
 
 PLAN_KEYS = ["style", "title", "layout", "pace", "ranges", "emphasis", "replace", "bgm",
              "bgm_db", "zoom", "zoom_amount", "model", "vocab", "face", "cut_fillers",
-             "title_mode", "style_overrides", "zooms", "audio", "texts", "speeds"]
+             "title_mode", "style_overrides", "zooms", "audio", "texts", "speeds", "fx"]
 
 
 def slug(name):
@@ -176,7 +176,7 @@ def cmd_edit(a):
     fgraph = render.build_filter(info, segments, zooms, centers, geom, ass_path, FONTS_DIR,
                                  duration, style, has_bgm=bool(bgm),
                                  bgm_db=float(plan.get("bgm_db", -20)), W=W, H=H,
-                                 audio_mode=audio_mode, speeds=speeds)
+                                 audio_mode=audio_mode, speeds=speeds, fx=plan.get("fx"))
     fpath = wd / "filter.txt"
     fpath.write_text(fgraph)
 

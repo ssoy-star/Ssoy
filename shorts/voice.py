@@ -58,11 +58,16 @@ def schedule(lines, durations, video_len):
     """각 줄의 (시작, 배속, 끝)을 정한다."""
     plan, prev_end = [], 0.0
     for i, (ln, d) in enumerate(zip(lines, durations)):
-        start = max(float(ln["at"]), prev_end + GAP if i else float(ln["at"]))
-        limit = float(lines[i + 1]["at"]) if i + 1 < len(lines) else video_len
-        window = max(limit - start, 0.3)
+        if ln.get("fixed"):  # 효과음(퍽 등)은 화면 타격 순간에 정확히 고정
+            start = float(ln["at"])
+        else:
+            start = max(float(ln["at"]), prev_end + GAP if i else float(ln["at"]))
+        nxt = lines[i + 1] if i + 1 < len(lines) else None
+        limit = float(nxt["at"]) if nxt else video_len
+        hard = bool(nxt and nxt.get("fixed"))  # 다음이 고정 효과음이면 그 전에 반드시 끝낸다
+        window = max(limit - start - (0.06 if hard else 0.0), 0.3)
         tempo = 1.0
-        if d > window + 0.25:  # 다음 장면까지 너무 넘치면 조금 빠르게
+        if d > window + (0.0 if hard else 0.25):  # 다음 장면까지 넘치면 조금 빠르게
             tempo = min(MAX_TEMPO, d / window)
         end = start + d / tempo
         plan.append({"start": round(start, 3), "tempo": round(tempo, 3), "end": round(end, 3)})
@@ -105,6 +110,10 @@ def build(cfg, workdir, log=print):
             chain += f",atempo={p['tempo']}"
         if ln.get("echo"):
             chain += ",apad=pad_dur=1.2,aecho=0.8:0.6:260|520:0.45|0.25"
+        if ln.get("reverb"):  # 영화 대사 같은 은은한 공간감
+            chain += ",apad=pad_dur=0.4,aecho=0.85:0.5:45|90|140:0.28|0.18|0.1"
+        if "gain_db" in ln:
+            chain += f",volume={float(ln['gain_db'])}dB"
         ms = int(p["start"] * 1000)
         chain += f",adelay={ms}|{ms},aformat=channel_layouts=stereo[l{i}]"
         g.append(chain)

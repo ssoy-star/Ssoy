@@ -43,9 +43,44 @@ def geometry(layout, info, style, W=OUT_W, H=OUT_H):
     }
 
 
+def fx_chain(fx, W, H):
+    """영화 느낌 효과: 타격 순간 화면 흔들림·번쩍임, 비네팅, 필름 그레인, 위아래 검은 띠.
+
+    fx = {"hits": [3.35, 6.7], "shake": 14, "flash": 0.22, "vignette": true, "grain": 7,
+          "letterbox": 0.065}
+    """
+    if not fx:
+        return ""
+    parts = []
+    hits = [float(h) for h in fx.get("hits", [])]
+    amp = int(fx.get("shake", 14) * W / OUT_W)
+    if hits and amp > 0:
+        dur = 0.2
+        sx = "+".join(f"if(between(t,{h:.3f},{h + dur:.3f}),{amp}*sin((t-{h:.3f})*95)*(1-(t-{h:.3f})/{dur}),0)"
+                      for h in hits)
+        sy = "+".join(f"if(between(t,{h:.3f},{h + dur:.3f}),{amp}*cos((t-{h:.3f})*80)*(1-(t-{h:.3f})/{dur}),0)"
+                      for h in hits)
+        pw, ph = W + 4 * amp, H + 4 * amp
+        parts.append(f"scale={pw}:{ph},crop={W}:{H}:x='{2 * amp}+{sx}':y='{2 * amp}+{sy}'")
+    flash = float(fx.get("flash", 0))
+    if hits and flash > 0:
+        br = "+".join(f"if(between(t,{h:.3f},{h + 0.07:.3f}),{flash},0)" for h in hits)
+        parts.append(f"eq=brightness='{br}':eval=frame")
+    if fx.get("vignette"):
+        parts.append("vignette=angle=PI/5")
+    if fx.get("grain"):
+        parts.append(f"noise=alls={int(fx['grain'])}:allf=t")
+    lb = float(fx.get("letterbox", 0))
+    if lb > 0:
+        bh = int(H * lb) // 2 * 2
+        parts.append(f"drawbox=x=0:y=0:w=iw:h={bh}:color=black:t=fill,"
+                     f"drawbox=x=0:y=ih-{bh}:w=iw:h={bh}:color=black:t=fill")
+    return ",".join(parts)
+
+
 def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, duration,
                  style, has_bgm=False, bgm_db=-20, W=OUT_W, H=OUT_H, audio_mode="normalize",
-                 speeds=None):
+                 speeds=None, fx=None):
     n = len(segments)
     sw, sh = info["width"], info["height"]
     k = W / OUT_W  # 드래프트(저해상도) 배율
@@ -97,7 +132,8 @@ def build_filter(info, segments, zooms, centers, geom, ass_path, fonts_dir, dura
         return "'" + str(p).replace("\\", "\\\\").replace("'", "\\'") + "'"
 
     vlast = "vs"
-    g.append(f"[cv]ass={q(ass_path)}:fontsdir={q(fonts_dir)}[vs]")
+    fxc = fx_chain(fx, W, H)
+    g.append(f"[cv]{fxc + ',' if fxc else ''}ass={q(ass_path)}:fontsdir={q(fonts_dir)}[vs]")
     bar = style.get("progress_bar", {})
     if bar.get("enabled", True):
         bh = max(2, int(bar.get("height", 10) * k))
